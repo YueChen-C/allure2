@@ -23,13 +23,7 @@ import io.qameta.allure.context.FreemarkerContext;
 import io.qameta.allure.context.JacksonContext;
 import io.qameta.allure.context.MarkdownContext;
 import io.qameta.allure.context.RandomUidContext;
-import io.qameta.allure.core.AttachmentsPlugin;
-import io.qameta.allure.core.Configuration;
-import io.qameta.allure.core.LaunchResults;
-import io.qameta.allure.core.MarkdownDescriptionsPlugin;
-import io.qameta.allure.core.Plugin;
-import io.qameta.allure.core.ReportWebPlugin;
-import io.qameta.allure.core.TestsResultsPlugin;
+import io.qameta.allure.core.*;
 import io.qameta.allure.duration.DurationPlugin;
 import io.qameta.allure.duration.DurationTrendPlugin;
 import io.qameta.allure.environment.Allure1EnvironmentPlugin;
@@ -40,6 +34,7 @@ import io.qameta.allure.idea.IdeaLinksPlugin;
 import io.qameta.allure.influxdb.InfluxDbExportPlugin;
 import io.qameta.allure.launch.LaunchPlugin;
 import io.qameta.allure.mail.MailPlugin;
+import io.qameta.allure.memory.RetryMemoryPlugin;
 import io.qameta.allure.owner.OwnerPlugin;
 import io.qameta.allure.plugin.DefaultPluginLoader;
 import io.qameta.allure.prometheus.PrometheusExportPlugin;
@@ -86,6 +81,7 @@ public final class DummyReportGenerator {
             new MarkdownDescriptionsPlugin(),
             new RetryPlugin(),
             new RetryTrendPlugin(),
+            new RetryMemoryPlugin(),
             new TagsPlugin(),
             new SeverityPlugin(),
             new OwnerPlugin(),

@@ -16,6 +16,7 @@ import './plugins/default';
 import './plugins/tab-category';
 import './plugins/tab-suites';
 import './plugins/tab-graph';
+import './plugins/tab-performance';
 import './plugins/tab-timeline';
 
 import './plugins/widget-status';
@@ -23,6 +24,7 @@ import './plugins/widget-severity';
 import './plugins/widget-duration';
 import './plugins/widget-duration-trend';
 import './plugins/widget-retry-trend';
+import './plugins/widget-line-trend';
 import './plugins/widget-categories-trend';
 
 import './plugins/widget-summary';

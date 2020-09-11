@@ -31,6 +31,9 @@
     "graph": {
       "name": "Graphs"
     },
+    "performance": {
+      "name": "Performance"
+    },
     "timeline": {
       "name": "Timeline",
       "selected": "Selected {{count}} test ({{percent}}%) with duration above {{duration}}",

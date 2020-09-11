@@ -25,6 +25,9 @@
     "graph": {
       "name": "图表"
     },
+    "performance": {
+      "name": "性能"
+    },
     "timeline": {
       "name": "时间刻度",
       "selected": "{{count}}个测试用例({{percent}}%)执行时间超过{{duration}}",
