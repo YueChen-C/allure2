@@ -29,18 +29,20 @@ public class RetryMemoryPlugin implements Aggregator, Reader {
     @Override
     public void aggregate(Configuration configuration, List<LaunchResults> launchesResults, Path outputDirectory) throws IOException {
 //        final Path dataFolder = Files.createDirectories(outputDirectory.resolve("data")); //  将数据保存至生成的html报告位置
-        final Path filePath = outputDirectory.resolve(Constants.WIDGETS_DIR).resolve("memory-trend.json");
         try {
             if (!Performance.isEmpty()){
-                FileWriter fw = new FileWriter(String.valueOf(filePath), true);
-                BufferedWriter bw = new BufferedWriter(fw);
-                ObjectMapper objectMapper = new ObjectMapper();
-                String jsonStr = objectMapper.writeValueAsString(Performance);
-                bw.write(String.valueOf(jsonStr));
-                bw.close();
-                fw.close();
-            }
+                for(String key : Performance.keySet()){
+                    final Path filePath = outputDirectory.resolve(Constants.WIDGETS_DIR).resolve(key+"-trend.json");
+                    FileWriter fw = new FileWriter(String.valueOf(filePath), true);
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    String jsonStr = objectMapper.writeValueAsString(Performance.get(key));
+                    bw.write(String.valueOf(jsonStr));
+                    bw.close();
+                    fw.close();
 
+                }
+            }
         } catch (Exception e) {
             // TODO Auto-generated catch block
             LOGGER.error("生成性能报告错误",e);
@@ -61,39 +63,68 @@ public class RetryMemoryPlugin implements Aggregator, Reader {
 
 
     static Map<String, Object> getPerformance(DirectoryStream<Path> files) throws FileNotFoundException {
-        Map<String, Object> Performance = new HashMap<>();
+        Map<String, Object> Performance = new HashMap<>(); // {cpu:{},memory:{}}
+        Map<String, Object> memoryPerformance = new HashMap<>();
+        Map<String, Object> cpuPerformance = new HashMap<>();
         for (Path file1 : files) {
-            ArrayList<Object> memoryData =new ArrayList<Object>();
+            List<MemoryData> memoryData=new ArrayList<MemoryData>();
+            List<MemoryData> cpuData=new ArrayList<MemoryData>();
             if (String.valueOf(file1.getFileName()).contains("performance")) {
                 BufferedReader bufferedReader = new BufferedReader(new FileReader(String.valueOf(file1)));
                 String str = null;
                 double memory = 0;
+                double cpu=0;
                 int index=0;
-                Map<String, Object> tempMemory = new HashMap<>();
-
                 while (true) {
                     try {
                         if ((str = bufferedReader.readLine()) == null) break;
-
                         ObjectMapper om = new ObjectMapper();
                         JsonNode root = om.readTree(str);
-                        root.path("date");
+                        MemoryData mData=new MemoryData();
+                        mData.setDate(root.path("date").asText());
+                        mData.setNum(root.path("memory").asDouble());
+
+                        MemoryData cData=new MemoryData();
+                        cData.setDate(root.path("date").asText());
+                        cData.setNum(root.path("cpu").asDouble());
+
+
                         memory = memory + root.path("memory").asDouble();
-                        memoryData.add(root);
+                        cpu = cpu + root.path("cpu").asDouble();
+                        memoryData.add(mData);
+                        cpuData.add(cData);
+
                         index+=1;
                     } catch (IOException e) {
                         LOGGER.error("生成性能报告错误",e);
                     }
                 }
-                tempMemory.put("memoryData",memoryData);
-                tempMemory.put("average",memory/index);
+                Devices mDevices=new Devices();
+                mDevices.setData(memoryData);
+                mDevices.setAverage(memory/index);
+
+                Devices cDevices=new Devices();
+                cDevices.setData(cpuData);
+                cDevices.setAverage(cpu/index);
 
                 String name = String.valueOf(file1.getFileName()).replaceAll(".txt", "");
                 name = name.replaceAll("performance-", "");
-                Performance.put(name, tempMemory);
+                memoryPerformance.put(name, mDevices);
+                cpuPerformance.put(name, cDevices);
             }
         }
+        PerformanceUtil memory =new PerformanceUtil();
+        memory.setData(memoryPerformance);
+        memory.setType("Memory");
+        memory.setUnit("MB");
 
+        PerformanceUtil cpu =new PerformanceUtil();
+        cpu.setData(cpuPerformance);
+        cpu.setType("Cpu");
+        cpu.setUnit("%");
+
+        Performance.put("memory",memory);
+        Performance.put("cpu",cpu);
         return Performance;
     }
 

@@ -28,8 +28,8 @@ class LineChartView extends BaseChartView {
     }
 
     onAttach() {
-
         const data = this.model.toJSON()[0];
+
         if (data) {
             this.doShow(data);
         } else {
@@ -41,15 +41,13 @@ class LineChartView extends BaseChartView {
 
     doShow(data) {
         this.setupViewport();
-        var focusChartMargin = { top: 20, right: 0, bottom: 170, left: 80 };
-        var contextChartMargin = { top: 360, right: 0, bottom: 90, left: 80 };
+        var focusChartMargin = { top: 20, right: 0, bottom: 0, left: 80 };
 
         // width of both charts
         var chartWidth = this.width - focusChartMargin.left - focusChartMargin.right;
 
         // height of either chart
         var focusChartHeight = this.height - focusChartMargin.top - focusChartMargin.bottom;
-        var contextChartHeight = this.height - contextChartMargin.top - contextChartMargin.bottom;
 
         // bootstraps the d3 parent selection
         this.svg
@@ -61,29 +59,29 @@ class LineChartView extends BaseChartView {
 
         // function to parse date field
         var parseTime = timeParse("%d/%H:%M:%S");
+        const deviceData = data.data
 
         //group all dates to get range for x axis later
         var dates = [];
-        for (let key of Object.keys(data)) {
-            data[key].memoryData.forEach(bucketRecord => {
+        for (let key of Object.keys(deviceData)) {
+            deviceData[key].data.forEach(bucketRecord => {
                 dates.push(parseTime(bucketRecord.date));
             });
         }
+        console.log(dates)
 
         //get max Y axis value by searching for the highest conversion rate
         var maxYAxisValue = -Infinity;
-        for (let key of Object.keys(data)) {
-            let maxYAxisValuePerBucket = Math.ceil(max(data[key].memoryData, d => d["memory"]));
+        for (let key of Object.keys(deviceData)) {
+            let maxYAxisValuePerBucket = Math.ceil(max(deviceData[key].data, d => d["num"]));
             maxYAxisValue = Math.max(maxYAxisValuePerBucket, maxYAxisValue+50);
         }
 
         // set the height of both y axis
         var yFocus = scaleLinear().range([focusChartHeight, 0]);
-        var yContext = scaleLinear().range([contextChartHeight, 0]);
 
         // set the width of both x axis
         var xFocus = scaleTime().range([0, chartWidth]);
-        var xContext = scaleTime().range([0, chartWidth]);
 
         // create both x axis to be rendered
         var xAxisFocus = axisBottom(xFocus)
@@ -91,28 +89,11 @@ class LineChartView extends BaseChartView {
             .tickFormat(timeFormat("%d/%H:%M"));
 
         // create the one y axis to be rendered
-        var yAxisFocus = axisLeft(yFocus).tickFormat(d => d + " MB");
+        var yAxisFocus = axisLeft(yFocus).tickFormat(d => d + " " +data.unit);
 
-        // build brush
-        // build zoom for the focus chart
-        // as specified in "filter" - zooming in/out can be done by pinching on the trackpad while mouse is over focus chart
-        // zooming in can also be done by double clicking while mouse is over focus chart
-        var tmp_zoom = zoom()
-            .scaleExtent([1, Infinity])
-            .translateExtent([
-                [0, 0],
-                [chartWidth, focusChartHeight],
-            ])
-            .extent([
-                [0, 0],
-                [chartWidth, focusChartHeight],
-            ])
-            .filter(() => this.event.ctrlKey || this.event.type === "dblclick" || this.event.type === "mousedown");
-
-        // create a line for focus chart
         var lineFocus = line()
             .x(d => xFocus(parseTime(d.date)))
-            .y(d => yFocus(d.memory))
+            .y(d => yFocus(d.num))
             .curve(curveNatural);
 
         // append the clip
@@ -132,8 +113,6 @@ class LineChartView extends BaseChartView {
 
         xFocus.domain(extent(dates));
         yFocus.domain([0, maxYAxisValue]);
-        xContext.domain(extent(dates));
-        yContext.domain(yFocus.domain());
 
         // add axis to focus chart
         focus
@@ -148,7 +127,7 @@ class LineChartView extends BaseChartView {
 
         // get list of bucket names
         var bucketNames = [];
-        for (let key of Object.keys(data)) {
+        for (let key of Object.keys(deviceData)) {
             bucketNames.push(key);
         }
 
@@ -162,7 +141,7 @@ class LineChartView extends BaseChartView {
             .attr("font-size", 10)
             .attr("text-anchor", "end")
             .selectAll("g")
-            .data(Object.keys(data))
+            .data(Object.keys(deviceData))
             .enter().append("g")
             .attr("transform", function(d, i) {
                 return "translate("+focusChartMargin.left+"," + i * 20 + ")";
@@ -182,11 +161,11 @@ class LineChartView extends BaseChartView {
             .attr("dy", "0.32em")
             .attr("text-anchor", "start")
             .text(function(d) {
-                return 'UDID：'+d+' AVG：'+data[d].average.toFixed(2)+' MB';
+                return 'UDID：'+d+' AVG：'+deviceData[d].average.toFixed(2)+' ' +data.unit;
             });
         // go through data and create/append lines to both charts
-        for (let key of Object.keys(data)) {
-            let bucket = data[key].memoryData;
+        for (let key of Object.keys(deviceData)) {
+            let bucket = deviceData[key].data;
             focusChartLines
                 .append("path")
                 .datum(bucket)
@@ -206,9 +185,8 @@ class LineChartView extends BaseChartView {
             .attr("width", chartWidth)
             .attr("height", focusChartHeight)
             .attr("transform", "translate(" + focusChartMargin.left + "," + focusChartMargin.top + ")")
-            .call(tmp_zoom);
 
-        // contextBrush.call(brush.move, [0, chartWidth]);
+
 
         // focus chart x label
         focus.append("text")
@@ -222,9 +200,7 @@ class LineChartView extends BaseChartView {
             .attr("text-anchor", "middle")
             .attr("transform", "translate(" + (-focusChartMargin.left + 20) + "," + focusChartHeight / 2 + ")rotate(-90)")
             .style("font-size", "18px")
-            .text("Memory Rate");
-
-
+            .text(data.type +" Rate");
     }
 
 }

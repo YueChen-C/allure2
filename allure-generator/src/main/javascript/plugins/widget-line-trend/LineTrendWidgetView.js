@@ -3,6 +3,7 @@ import template from './LineTrendWidgetView.hbs';
 import {View} from 'backbone.marionette';
 import {className, regions} from '../../decorators/index';
 import LineChartView from "../../components/graph-line-chart/lineChartView";
+import LoaderView from "../../components/loader/LoaderView";
 
 
 @regions({
@@ -18,6 +19,8 @@ class LineTrendWidgetView extends View {
             hideLines: true,
             hidePoints: true
         }));
+
+
     }
 }
 
